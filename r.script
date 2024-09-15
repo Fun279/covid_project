@@ -1,0 +1,55 @@
+# Rimuove tutte le variabili precedentemente memorizzate nell'ambiente
+rm(list=ls())
+
+# Installa il pacchetto 'Hmisc' se non è già installato
+install.packages("Hmisc")
+
+# Carica il pacchetto 'Hmisc' per l'analisi descrittiva dei dati
+library(Hmisc)
+
+# Importa i dati del progetto COVID-19 da un file CSV locale
+data <- read.csv("C:/Users/Mădălina/OneDrive/Desktop/covid project/COVID19_line_list_data.csv")
+
+# Fornisce una descrizione dettagliata del dataset
+describe(data)
+
+# Pulizia dei dati: se una persona non è morta (death = 0), assegna 0 (vivo), 
+# altrimenti assegna 1 (morto), convertendo i valori diversi da 0 in 1
+data$data_dummy <- as.integer(data$death != 0)
+
+# Calcola il tasso di mortalità nel dataset
+mortality_rate <- sum(data$death_dummy) / nrow(data)
+mortality_rate
+
+# Età media delle persone morte vs. vive
+# Ipotesi: le persone decedute sono più anziane rispetto a quelle vive
+dead <- subset(data, death_dummy == 1)
+alive <- subset(data, death_dummy == 0)
+
+# Età media delle persone decedute
+mean(dead$age, na.rm = TRUE) #68.586
+
+# Età media delle persone vive
+mean(alive$age, na.rm = TRUE) #48.0722
+
+# Test t per verificare se la differenza di età tra morti e vivi è statisticamente significativa
+# Se p-value < 0.05, si rifiuta l'ipotesi nulla di nessuna differenza significativa
+t.test(alive$age, dead$age, alternative = "two.sided", conf.level = 0.99)
+
+# Analisi del sesso
+# Confronto tra maschi e femmine in termini di tasso di mortalità
+men <- subset(data, gender == "male")
+women <- subset(data, gender == "female")
+
+# Tasso di mortalità per i maschi
+mean(men$death_dummy, na.rm = TRUE) #0.084
+
+# Tasso di mortalità per le femmine
+mean(women$death_dummy, na.rm = TRUE) #0.036
+
+# Test t per confrontare la probabilità di mortalità tra maschi e femmine
+# Con una confidenza del 99%, testiamo se c'è una differenza significativa
+t.test(men$death_dummy, women$death_dummy, alternative = "two.sided", conf.level = 0.99)
+
+# I risultati indicano che gli uomini hanno dal 0.078% all'8.8% più probabilità di morire rispetto alle donne
+# p-value = 0.002105 < 0.05: l'ipotesi di differenza è statisticamente accettata
